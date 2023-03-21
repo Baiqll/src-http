@@ -11,9 +11,21 @@ go install github.com/arews-cn/src-http@latest
 #### 使用
 ```shell
 
+# 默认启动
 src-http
 
-# src-http payload <img/src/onerror=alert(1)>
+# 加载 payload
+src-http -payload "<img/src/onerror=alert(1)>"
+
+# 指定域名(自动本地dns域名绑定)、端口
+src-http -server example.com:8080
+
+# 关闭https 、使用http
+src-http -close_tls
+
+# 使用自定义证书
+src-http -crt /home/crt.pem -key /home/key.pem
+
 ```
 默认开启 https 服务
 * https://0.0.0.0/message 接收信息接口
