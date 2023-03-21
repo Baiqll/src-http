@@ -39,3 +39,7 @@ src-http -crt /home/crt.pem -key /home/key.pem
 ftp 服务
 
 <img width="791" alt="image" src="https://user-images.githubusercontent.com/77313240/226533305-6e2a9c8c-a5d3-4309-9c17-a5e66c7f1baa.png">
+
+payload 
+
+<img width="791" alt="image" src="https://user-images.githubusercontent.com/77313240/226548810-e64cd8a2-879f-4259-9505-ca5d479ced3b.png">
