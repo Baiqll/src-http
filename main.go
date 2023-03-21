@@ -1,16 +1,17 @@
 package main
 
 import (
+	_ "embed"
 	"flag"
 	"fmt"
 	"net"
 	"net/http"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
 
+	"github.com/arews-cn/src-http/src/cert"
 	"github.com/thinkeridea/go-extend/exnet"
 )
 
@@ -32,16 +33,14 @@ func main() {
 	// now:=time.Now().Format("2006-01-02 15:04:05")
 
 	var server string
-	var tls_crt string
-	var tls_key string
 	var payload string
 	var close_tls bool
+	var tls_path = "/tmp/.src-http/"
 
 	flag.StringVar(&server, "server", "", "https 服务")
 	flag.BoolVar(&close_tls, "close_tls", false, "关闭 tls")
 	flag.StringVar(&payload, "payload", "", "payload")
-	flag.StringVar(&tls_crt, "crt", "server-crt.pem", "TLS crt")
-	flag.StringVar(&tls_key, "key", "server-key.pem", "TLS key")
+
 	// 解析命令行参数写入注册的flag里
 	flag.Parse()
 
@@ -72,15 +71,15 @@ func main() {
 		}
 	}
 
-	// tls 证书路径
-	current_path, _ := get_current_path()
-	tls_crt = current_path + "/" + tls_crt
-	tls_key = current_path + "/" + tls_key
-
 	// 开始启动服务
 	fmt.Println("[*] Starting server ", server, "...")
 
-	http_server(server, tls_crt, tls_key, payload, close_tls)
+	err := create_tls_cert(tls_path)
+	if err != nil {
+		fmt.Println("TLS Cert Error")
+	}
+
+	http_server(server, tls_path+"server.pem", tls_path+"server.key", payload, close_tls)
 
 }
 
@@ -133,13 +132,35 @@ func http_server(server string, tls_crt string, tls_key string, payload string, 
 		http.ListenAndServe(server, mux)
 	} else {
 		// 使用https
-		http.ListenAndServeTLS(server, tls_crt, tls_key, mux)
+		err := http.ListenAndServeTLS(server, tls_crt, tls_key, mux)
+		if err != nil {
+			fmt.Println("TLS Cert Error:", err.Error())
+		}
 	}
 }
 
-func get_current_path() (string, error) {
-	path, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	return string(path), err
+func create_tls_cert(tls_path string) (err error) {
+
+	// tls 证书路径
+	if !exists(tls_path+"server.pem") || !exists(tls_path+"server.key") {
+
+		// 创建证书
+		err = cert.CreateCert(tls_path)
+
+	}
+
+	return
+}
+
+func exists(path string) bool {
+	_, err := os.Stat(path) //os.Stat获取文件信息
+	if err != nil {
+		if os.IsExist(err) {
+			return true
+		}
+		return false
+	}
+	return true
 }
 
 func get_remote_ip(req *http.Request) string {
