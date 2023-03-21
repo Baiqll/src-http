@@ -37,7 +37,7 @@ func main() {
 
 	flag.StringVar(&server, "server", "", "https 服务")
 	flag.BoolVar(&close_tls, "close_tls", false, "关闭 tls")
-	flag.StringVar(&payload, "payload", "", "简单payload")
+	flag.StringVar(&payload, "payload", "", "payload")
 	flag.StringVar(&tls_crt, "crt", "server-crt.pem", "TLS crt")
 	flag.StringVar(&tls_key, "key", "server-key.pem", "TLS key")
 	// 解析命令行参数写入注册的flag里
@@ -81,21 +81,19 @@ func main() {
 	fmt.Println("[*] Starting server ", server, "...")
 
 
-	if payload!="" {
-
-		payload_server(server, tls_crt, tls_key, payload, close_tls)
-	}else{
-
-		http_server(server, tls_crt, tls_key, close_tls)
-	}
+	http_server(server, tls_crt, tls_key,payload, close_tls)
+	
 
 }
 	
 
-// 开启payload 模式服务
-func payload_server(server string,tls_crt string,tls_key string, payload string, close_tls bool){
-	
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request){	
+// 开启文件类型模式
+func http_server(server string,tls_crt string,tls_key string, payload string, close_tls bool){
+
+	mux := http.NewServeMux()
+  	mux.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("./"))))
+
+	mux.HandleFunc("/payload", func(w http.ResponseWriter, r *http.Request){
 		w.Header().Set("Access-Control-Allow-Origin", "*") 
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, UPDATE")
 		w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
@@ -104,21 +102,27 @@ func payload_server(server string,tls_crt string,tls_key string, payload string,
 		w.Write([]byte(payload));
 	})
 
-	if close_tls{
-		// 使用http
-		http.ListenAndServe(server, nil)
-	}else{
-		// 使用https
-		http.ListenAndServeTLS(server, tls_crt, tls_key, nil)
-	}
 
-}
+	mux.HandleFunc("/message", func(w http.ResponseWriter, r *http.Request){
+		
+		
+		content:= make([]byte, r.ContentLength)
+		r.Body.Read(content)
 
-// 开启文件类型模式
-func http_server(server string,tls_crt string,tls_key string, close_tls bool){
+		fmt.Println("")
+		fmt.Println("Method:", r.Method)
+		fmt.Println("URL: ",r.URL)
+		fmt.Println("Param: ",r.URL.RawQuery)
+		fmt.Println("Body: ",string(content))
+		
 
-	mux := http.NewServeMux()
-  	mux.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("./"))))
+		w.Header().Set("Access-Control-Allow-Origin", "*") 
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, UPDATE")
+		w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
+		w.Header().Set("Access-Control-Expose-Headers", "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Cache-Control, Content-Language, Content-Type")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		w.Write([]byte(`{"message": "OK"}`));
+	})
 
 	if close_tls{
 		// 使用http
