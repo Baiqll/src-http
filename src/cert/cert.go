@@ -9,6 +9,7 @@ import (
 	"math/big"
 	"net"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -39,11 +40,11 @@ func CreateCert(tls_path string) (err error) {
 	pk, err := rsa.GenerateKey(rand.Reader, 2048)
 
 	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &pk.PublicKey, pk)
-	certOut, err := os.Create(tls_path + "/server.pem")
+	certOut, err := os.Create(filepath.Join(tls_path, "server.pem"))
 	pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
 	certOut.Close()
 
-	keyOut, err := os.Create(tls_path + "/server.key")
+	keyOut, err := os.Create(filepath.Join(tls_path, "server.key"))
 	pem.Encode(keyOut, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(pk)})
 	keyOut.Close()
 

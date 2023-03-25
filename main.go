@@ -7,6 +7,8 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/user"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -35,7 +37,9 @@ func main() {
 	var server string
 	var payload string
 	var close_tls bool
-	var tls_path = "/tmp/.src-http/"
+	var tls_path = filepath.Join(user_home_dir(), ".config/src-http")
+
+	fmt.Println("sss", tls_path)
 
 	flag.StringVar(&server, "server", "", "https 服务")
 	flag.BoolVar(&close_tls, "close_tls", false, "关闭 tls")
@@ -79,7 +83,7 @@ func main() {
 		fmt.Println("TLS Cert Error")
 	}
 
-	http_server(server, tls_path+"server.pem", tls_path+"server.key", payload, close_tls)
+	http_server(server, filepath.Join(tls_path, "server.pem"), filepath.Join(tls_path, "server.key"), payload, close_tls)
 
 }
 
@@ -182,6 +186,14 @@ func get_remote_ip(req *http.Request) string {
 	}
 
 	return remoteAddr
+}
+
+func user_home_dir() string {
+	usr, err := user.Current()
+	if err != nil {
+		fmt.Println("Could not get user home directory: %s\n", err)
+	}
+	return usr.HomeDir
 }
 
 // 设置hosts域名绑定
