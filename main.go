@@ -39,8 +39,6 @@ func main() {
 	var close_tls bool
 	var tls_path = filepath.Join(user_home_dir(), ".config/src-http")
 
-	fmt.Println("sss", tls_path)
-
 	flag.StringVar(&server, "server", "", "https 服务")
 	flag.BoolVar(&close_tls, "close_tls", false, "关闭 tls")
 	flag.StringVar(&payload, "payload", "", "payload")
