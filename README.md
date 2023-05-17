@@ -26,6 +26,9 @@ src-http -close_tls
 # 使用自定义证书
 src-http -crt /home/crt.pem -key /home/key.pem
 
+# 指定默认模版
+src-http -default default.html
+
 ```
 默认开启 https 服务
 * https://0.0.0.0/message 接收信息接口
