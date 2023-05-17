@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -37,13 +38,13 @@ func main() {
 	var server string
 	var payload string
 	var close_tls bool
+	var default_file string
 	var tls_path = filepath.Join(user_home_dir(), ".config/src-http")
-
-	fmt.Println("sss", tls_path)
 
 	flag.StringVar(&server, "server", "", "https 服务")
 	flag.BoolVar(&close_tls, "close_tls", false, "关闭 tls")
 	flag.StringVar(&payload, "payload", "", "payload")
+	flag.StringVar(&default_file, "default", "", "default_file")
 
 	// 解析命令行参数写入注册的flag里
 	flag.Parse()
@@ -83,16 +84,25 @@ func main() {
 		fmt.Println("TLS Cert Error")
 	}
 
-	http_server(server, filepath.Join(tls_path, "server.pem"), filepath.Join(tls_path, "server.key"), payload, close_tls)
+	http_server(server, filepath.Join(tls_path, "server.pem"), filepath.Join(tls_path, "server.key"), payload, default_file, close_tls)
 
 }
 
 // 开启文件类型模式
-func http_server(server string, tls_crt string, tls_key string, payload string, close_tls bool) {
+func http_server(server string, tls_crt string, tls_key string, payload string, default_file string, close_tls bool) {
 
 	mux := http.NewServeMux()
 
 	mux.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("./"))))
+
+	mux.HandleFunc("/default/", func(w http.ResponseWriter, r *http.Request) {
+		data, err := ioutil.ReadFile(default_file)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Write(data)
+	})
 
 	// payload server
 	mux.HandleFunc("/payload/", func(w http.ResponseWriter, r *http.Request) {
@@ -110,8 +120,44 @@ func http_server(server string, tls_crt string, tls_key string, payload string, 
 		w.Write([]byte(payload))
 	})
 
+	// payload server
+	mux.HandleFunc("/Payload/", func(w http.ResponseWriter, r *http.Request) {
+
+		fmt.Println("\nDate: ", time.Now())
+		fmt.Println("From: ", get_remote_ip(r))
+		fmt.Println("Method:", r.Method)
+		fmt.Println("URL: ", r.URL)
+
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, UPDATE")
+		w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
+		w.Header().Set("Access-Control-Expose-Headers", "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Cache-Control, Content-Language, Content-Type")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		w.Write([]byte(payload))
+	})
+
 	// message server
 	mux.HandleFunc("/message/", func(w http.ResponseWriter, r *http.Request) {
+
+		content := make([]byte, r.ContentLength)
+		r.Body.Read(content)
+
+		fmt.Println("\nDate: ", time.Now())
+		fmt.Println("From: ", get_remote_ip(r))
+		fmt.Println("Method:", r.Method)
+		fmt.Println("URL: ", r.URL)
+		fmt.Println("Param: ", r.URL.RawQuery)
+		fmt.Println("Body: ", string(content))
+
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, UPDATE")
+		w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
+		w.Header().Set("Access-Control-Expose-Headers", "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Cache-Control, Content-Language, Content-Type")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		w.Write([]byte(`{"message": "OK"}`))
+	})
+
+	mux.HandleFunc("/Message/", func(w http.ResponseWriter, r *http.Request) {
 
 		content := make([]byte, r.ContentLength)
 		r.Body.Read(content)
