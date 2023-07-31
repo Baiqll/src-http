@@ -4,7 +4,7 @@ Goalng 编写的简易web 服务，一键部署exp
 #### 安装
 ```shell
 
-go install github.com/arews-cn/src-http@latest
+go install github.com/baiqll/src-http@latest
 
 ```
 
