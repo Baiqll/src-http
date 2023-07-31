@@ -5,17 +5,14 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"net/http"
-	"os"
-	"os/user"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
 
-	"github.com/arews-cn/src-http/src/cert"
-	"github.com/thinkeridea/go-extend/exnet"
+	"github.com/baiqll/src-http/src/cert"
+	"github.com/baiqll/src-http/src/lib"
 )
 
 func main() {
@@ -39,7 +36,7 @@ func main() {
 	var payload string
 	var close_tls bool
 	var default_file string
-	var tls_path = filepath.Join(user_home_dir(), ".config/src-http")
+	var tls_path = filepath.Join(lib.HomeDir(), ".config/src-http")
 
 	flag.StringVar(&server, "server", "", "https 服务")
 	flag.BoolVar(&close_tls, "close_tls", false, "关闭 tls")
@@ -62,6 +59,7 @@ func main() {
 		}
 
 		if is_host, _ := regexp.MatchString(`[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+\.?`, host); !is_host {
+
 			return
 		}
 		if is_port, _ := regexp.MatchString(`[0-9]+`, port); !is_port {
@@ -79,7 +77,7 @@ func main() {
 	// 开始启动服务
 	fmt.Println("[*] Starting server ", server, "...")
 
-	err := create_tls_cert(tls_path)
+	err := cert.CreateTlsCert(tls_path, lib.GetInternetIP())
 	if err != nil {
 		fmt.Println("TLS Cert Error")
 	}
@@ -108,7 +106,7 @@ func http_server(server string, tls_crt string, tls_key string, payload string, 
 	mux.HandleFunc("/payload/", func(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Println("\nDate: ", time.Now())
-		fmt.Println("From: ", get_remote_ip(r))
+		fmt.Println("From: ", lib.GetRemoteIp(r))
 		fmt.Println("Method:", r.Method)
 		fmt.Println("URL: ", r.URL)
 
@@ -124,7 +122,7 @@ func http_server(server string, tls_crt string, tls_key string, payload string, 
 	mux.HandleFunc("/Payload/", func(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Println("\nDate: ", time.Now())
-		fmt.Println("From: ", get_remote_ip(r))
+		fmt.Println("From: ", lib.GetRemoteIp(r))
 		fmt.Println("Method:", r.Method)
 		fmt.Println("URL: ", r.URL)
 
@@ -143,7 +141,7 @@ func http_server(server string, tls_crt string, tls_key string, payload string, 
 		r.Body.Read(content)
 
 		fmt.Println("\nDate: ", time.Now())
-		fmt.Println("From: ", get_remote_ip(r))
+		fmt.Println("From: ", lib.GetRemoteIp(r))
 		fmt.Println("Method:", r.Method)
 		fmt.Println("URL: ", r.URL)
 		fmt.Println("Param: ", r.URL.RawQuery)
@@ -163,7 +161,7 @@ func http_server(server string, tls_crt string, tls_key string, payload string, 
 		r.Body.Read(content)
 
 		fmt.Println("\nDate: ", time.Now())
-		fmt.Println("From: ", get_remote_ip(r))
+		fmt.Println("From: ", lib.GetRemoteIp(r))
 		fmt.Println("Method:", r.Method)
 		fmt.Println("URL: ", r.URL)
 		fmt.Println("Param: ", r.URL.RawQuery)
@@ -189,67 +187,3 @@ func http_server(server string, tls_crt string, tls_key string, payload string, 
 	}
 }
 
-func create_tls_cert(tls_path string) (err error) {
-
-	// tls 证书路径
-	if !exists(tls_path+"server.pem") || !exists(tls_path+"server.key") {
-
-		// 创建证书
-		err = cert.CreateCert(tls_path)
-
-	}
-
-	return
-}
-
-func exists(path string) bool {
-	_, err := os.Stat(path) //os.Stat获取文件信息
-	if err != nil {
-		if os.IsExist(err) {
-			return true
-		}
-		return false
-	}
-	return true
-}
-
-func get_remote_ip(req *http.Request) string {
-	remoteAddr := req.RemoteAddr
-	if ip := exnet.ClientPublicIP(req); ip != "" {
-		remoteAddr = ip
-	} else if ip := exnet.ClientIP(req); ip != "" {
-		remoteAddr = ip
-	} else if ip := req.Header.Get("X-Real-IP"); ip != "" {
-		remoteAddr = ip
-	} else if ip = req.Header.Get("X-Forwarded-For"); ip != "" {
-		remoteAddr = ip
-	} else {
-		remoteAddr, _, _ = net.SplitHostPort(remoteAddr)
-	}
-
-	if remoteAddr == "::1" {
-		remoteAddr = "127.0.0.1"
-	}
-
-	return remoteAddr
-}
-
-func user_home_dir() string {
-	usr, err := user.Current()
-	if err != nil {
-		fmt.Println("Could not get user home directory: %s\n", err)
-	}
-	return usr.HomeDir
-}
-
-// 设置hosts域名绑定
-func set_hosts(host string) {
-
-	// etc/hosts
-
-}
-
-// 取消hosts域名绑定
-func unload_hosts(host string) {
-
-}

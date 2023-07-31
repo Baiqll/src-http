@@ -1,4 +1,4 @@
-module github.com/arews-cn/src-http
+module github.com/baiqll/src-http
 
 go 1.19
 
