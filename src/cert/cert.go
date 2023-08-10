@@ -105,7 +105,7 @@ func CreateCert(tls_path string, domain string) (err error) {
 			OrganizationalUnit: []string{"SRCHTTP"},
 			CommonName:         "srchttp.com",
 		},
-		NotBefore:             time.Now(),
+		NotBefore:             time.Now().AddDate(0, 0, -2),
 		NotAfter:              time.Now().AddDate(2, 0, 0),
 		BasicConstraintsValid: true,
 		IsCA:                  false,
