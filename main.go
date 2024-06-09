@@ -138,24 +138,23 @@ func http_server(server string, tls_crt string, tls_key string, payload string, 
 	mux.HandleFunc("/message/", func(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Printf("Request Method: %s\n", r.Method)
-        fmt.Printf("Request URL: %s\n", r.URL)
-        fmt.Printf("Protocol: %s\n", r.Proto)
-
-        // 打印请求头
-        fmt.Println("Request Headers:\n")
-        for key, values := range r.Header {
-            for _, value := range values {
-                fmt.Printf("%s: %s\n", key, value)
-            }
-        }
-
-        // 打印请求体，如果请求体是可读的
-        if r.Method == "POST" || r.Method == "PUT" {
-            body, _ := ioutil.ReadAll(r.Body)
-            fmt.Printf("Request Body: %s\n", body)
-            // 重置请求体，以便后续处理器可以使用
-            r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-        }
+	        fmt.Printf("Request URL: %s\n", r.URL)
+	        fmt.Printf("Protocol: %s\n", r.Proto)
+	
+	        // 打印请求头
+	        fmt.Println("Request Headers:\n")
+	        for key, values := range r.Header {
+	            for _, value := range values {
+	                fmt.Printf("%s: %s\n", key, value)
+	            }
+	        }
+	
+	           // 打印请求体，如果请求体是可读的
+	        if r.Method == "POST" || r.Method == "PUT" {
+	            content := make([]byte, r.ContentLength)
+		    r.Body.Read(content)
+	            fmt.Printf("Request Body: %s\n", content)
+	        }
 
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, UPDATE")
@@ -168,24 +167,23 @@ func http_server(server string, tls_crt string, tls_key string, payload string, 
 	mux.HandleFunc("/Message/", func(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Printf("Request Method: %s\n", r.Method)
-        fmt.Printf("Request URL: %s\n", r.URL)
-        fmt.Printf("Protocol: %s\n", r.Proto)
-
-        // 打印请求头
-        fmt.Println("Request Headers:\n")
-        for key, values := range r.Header {
-            for _, value := range values {
-                fmt.Printf("%s: %s\n", key, value)
-            }
-        }
-
-        // 打印请求体，如果请求体是可读的
-        if r.Method == "POST" || r.Method == "PUT" {
-            body, _ := ioutil.ReadAll(r.Body)
-            fmt.Printf("Request Body: %s\n", body)
-            // 重置请求体，以便后续处理器可以使用
-            r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-        }
+	        fmt.Printf("Request URL: %s\n", r.URL)
+	        fmt.Printf("Protocol: %s\n", r.Proto)
+	
+	        // 打印请求头
+	        fmt.Println("Request Headers:\n")
+	        for key, values := range r.Header {
+	            for _, value := range values {
+	                fmt.Printf("%s: %s\n", key, value)
+	            }
+	        }
+	
+	        // 打印请求体，如果请求体是可读的
+	        if r.Method == "POST" || r.Method == "PUT" {
+	            content := make([]byte, r.ContentLength)
+		    r.Body.Read(content)
+	            fmt.Printf("Request Body: %s\n", content)
+	        }
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, UPDATE")
 		w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
