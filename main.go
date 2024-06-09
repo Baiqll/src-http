@@ -138,7 +138,7 @@ func http_server(server string, tls_crt string, tls_key string, payload string, 
 	mux.HandleFunc("/message/", func(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Printf("%s %s %s\n",r.Method, r.URL,r.Proto)
-		fmt.Printf("Host: %s\n",r.host)
+		fmt.Printf("Host: %s\n",r.Host)
 		fmt.Printf("From: %s\n",lib.GetRemoteIp(r))
 		
 
@@ -169,7 +169,7 @@ func http_server(server string, tls_crt string, tls_key string, payload string, 
 	mux.HandleFunc("/Message/", func(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Printf("%s %s %s\n",r.Method, r.URL,r.Proto)
-		fmt.Printf("Host: %s\n",r.host)
+		fmt.Printf("Host: %s\n",r.Host)
 		fmt.Printf("From: %s\n",lib.GetRemoteIp(r))
 	  
 
