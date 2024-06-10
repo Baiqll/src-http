@@ -86,7 +86,7 @@ func main() {
 
 }
 
-fun http_write(w http.ResponseWriter, res_data []byte){
+func http_write(w http.ResponseWriter, res_data []byte){
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, UPDATE")
 	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
