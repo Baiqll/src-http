@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/baiqll/src-http/src/cert"
 	"github.com/baiqll/src-http/src/lib"
@@ -122,7 +121,7 @@ func http_server(server string, tls_crt string, tls_key string, payload string, 
 		}
 		fmt.Print("\n")
 
-		if(strings.HasPrefix(r.URL, "/default")){
+		if(strings.HasPrefix(r.URL.String(), "/default")){
 			data, err := ioutil.ReadFile(default_file)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -131,11 +130,11 @@ func http_server(server string, tls_crt string, tls_key string, payload string, 
 
 			http_write(w,data)
 			
-		}else if(strings.HasPrefix(r.URL, "/Payload")){
+		}else if(strings.HasPrefix(r.URL.String(), "/Payload")){
 
 			http_write(w,[]byte(payload))
 
-		}else if(strings.HasPrefix(r.URL, "/message")){
+		}else if(strings.HasPrefix(r.URL.String(), "/message")){
 
 			http_write(w,[]byte(`{"message": "OK"}`))
 			
