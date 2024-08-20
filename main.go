@@ -121,7 +121,16 @@ func http_server(server string, tls_crt string, tls_key string, payload string, 
 		}
 		fmt.Print("\n")
 
-		if(strings.HasPrefix(r.URL.String(), "/default")){
+		if (strings.HasPrefix(r.URL.String(), "/redirect")){
+			// 设置重定向
+
+			location := r.URL.Query().Get("url")
+
+			http.Redirect(w, r, location, http.StatusFound)
+
+		}else if(strings.HasPrefix(r.URL.String(), "/default")){
+			// 设置默认信息
+
 			data, err := ioutil.ReadFile(default_file)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -131,14 +140,17 @@ func http_server(server string, tls_crt string, tls_key string, payload string, 
 			http_write(w,data)
 			
 		}else if(strings.HasPrefix(r.URL.String(), "/Payload")){
+			// 自定义返回内容
 
 			http_write(w,[]byte(payload))
 
 		}else if(strings.HasPrefix(r.URL.String(), "/message")){
+			// 返回全内容（接收消息）
 
 			http_write(w,[]byte(`{"message": "OK"}`))
 			
 		}else{
+			// 文件系统
 
 			http.FileServer(http.Dir("./")).ServeHTTP(w, r)
 
