@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -33,12 +34,12 @@ func main() {
 
 	var server string
 	var payload string
-	var close_tls bool
+	var enable_tls bool
 	var default_file string
 	var tls_path = filepath.Join(lib.HomeDir(), ".config/src-http")
 
 	flag.StringVar(&server, "server", "", "https 服务")
-	flag.BoolVar(&close_tls, "distls", false, "关闭 tls")
+	flag.BoolVar(&enable_tls, "tls", false, "是否开启tls，默认关闭")
 	flag.StringVar(&payload, "payload", "", "payload")
 	flag.StringVar(&default_file, "f", "", "default_file")
 
@@ -65,11 +66,24 @@ func main() {
 			return
 		}
 
+		if host!= "0.0.0.0"{
+			/*
+				设置本地域名解析
+			*/
+			cmd := exec.Command("sh", "-c", fmt.Sprintf("echo '127.0.0.1       %s' | sudo tee -a /etc/hosts > /dev/null",host))
+			_, err := cmd.CombinedOutput()
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			server = "0.0.0.0:"+port
+		}
+
 	} else {
-		if close_tls {
-			server = "0.0.0.0:80"
-		} else {
+		if enable_tls {
 			server = "0.0.0.0:443"
+		} else {
+			server = "0.0.0.0:80"
 		}
 	}
 
@@ -81,7 +95,7 @@ func main() {
 		fmt.Println("TLS Cert Error")
 	}
 
-	http_server(server, filepath.Join(tls_path, "server.pem"), filepath.Join(tls_path, "server.key"), payload, default_file, close_tls)
+	http_server(server, filepath.Join(tls_path, "server.pem"), filepath.Join(tls_path, "server.key"), payload, default_file, enable_tls)
 
 }
 
@@ -95,7 +109,7 @@ func http_write(w http.ResponseWriter, res_data []byte){
 }
 
 // 开启文件类型模式
-func http_server(server string, tls_crt string, tls_key string, payload string, default_file string, close_tls bool) {
+func http_server(server string, tls_crt string, tls_key string, payload string, default_file string, enable_tls bool) {
 
 	mux := http.NewServeMux()
 
@@ -158,15 +172,16 @@ func http_server(server string, tls_crt string, tls_key string, payload string, 
 
 	})
 
-	if close_tls {
-		// 使用http
-		http.ListenAndServe(server, mux)
-	} else {
+	if enable_tls {
 		// 使用https
 		err := http.ListenAndServeTLS(server, tls_crt, tls_key, mux)
 		if err != nil {
 			fmt.Println("TLS Cert Error:", err.Error())
 		}
+		
+	} else {
+		// 使用http
+		http.ListenAndServe(server, mux)
 	}
 }
 
