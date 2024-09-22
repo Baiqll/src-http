@@ -33,12 +33,19 @@ func main() {
 
 	var server string
 	var payload string
-	var close_tls bool
+	var enable_tls bool
 	var default_file string
 	var tls_path = filepath.Join(lib.HomeDir(), ".config/src-http")
+	var internet_ip = lib.GetInternetIP()
+	var domain string
+	var port string
+	var method string
+	var web_server string
+	var is_new_domain = false
+	var show_internet_server = true
 
 	flag.StringVar(&server, "server", "", "https 服务")
-	flag.BoolVar(&close_tls, "distls", false, "关闭 tls")
+	flag.BoolVar(&enable_tls, "tls", false, "是否开启tls，默认关闭")
 	flag.StringVar(&payload, "payload", "", "payload")
 	flag.StringVar(&default_file, "f", "", "default_file")
 
@@ -47,41 +54,70 @@ func main() {
 
 	// 判断域名是否合规
 	if server != "" {
-		var host string
-		var port string
+		
 
 		server_split := strings.Split(server, ":")
-
-		host = server_split[0]
+		domain = server_split[0]
 		if len(server_split) > 1 {
 			port = server_split[1]
 		}
 
-		if is_host, _ := regexp.MatchString(`[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+\.?`, host); !is_host {
+		if is_host, _ := regexp.MatchString(`[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+\.?`, domain); !is_host {
 
 			return
 		}
-		if is_port, _ := regexp.MatchString(`[0-9]+`, port); !is_port {
-			return
-		}
 
-	} else {
-		if close_tls {
-			server = "0.0.0.0:80"
-		} else {
-			server = "0.0.0.0:443"
+		if domain!= "0.0.0.0"{
+			/*
+				设置本地域名解析
+			*/
+			is_new_domain = lib.NewDNS(domain)
+			show_internet_server = false
+
+		}
+		
+	}
+
+	lib.NewDNS(internet_ip)
+
+	if port == ""{
+		if enable_tls{
+			port = "443"
+		}else{
+			port = "80"
 		}
 	}
 
-	// 开始启动服务
-	fmt.Println("[*] Starting server ", server, "...")
+	server = "0.0.0.0:"+ port
 
-	err := cert.CreateTlsCert(tls_path, lib.GetInternetIP())
+
+	if enable_tls{
+		method = "https"
+	}else{
+		method = "http"
+	}
+
+	if domain !=""{
+		web_server = method + "://" + domain + ":" + port
+	}else{
+		web_server = method + "://127.0.0.1:" + port
+	}
+
+
+	// 开始启动服务
+	fmt.Println("[*] Starting server ",web_server, "...")
+	if show_internet_server{
+		fmt.Println("[*] Internet server ", method + "://" + internet_ip + ":" + port )
+	}
+	
+	fmt.Println("[*] Listening ", server)
+
+	err := cert.CreateTlsCert(tls_path,[]string{domain},internet_ip, is_new_domain)
 	if err != nil {
 		fmt.Println("TLS Cert Error")
 	}
 
-	http_server(server, filepath.Join(tls_path, "server.pem"), filepath.Join(tls_path, "server.key"), payload, default_file, close_tls)
+	http_server(server, filepath.Join(tls_path, "server.pem"), filepath.Join(tls_path, "server.key"), payload, default_file, enable_tls)
 
 }
 
@@ -95,7 +131,7 @@ func http_write(w http.ResponseWriter, res_data []byte){
 }
 
 // 开启文件类型模式
-func http_server(server string, tls_crt string, tls_key string, payload string, default_file string, close_tls bool) {
+func http_server(server string, tls_crt string, tls_key string, payload string, default_file string, enable_tls bool) {
 
 	mux := http.NewServeMux()
 
@@ -158,15 +194,16 @@ func http_server(server string, tls_crt string, tls_key string, payload string, 
 
 	})
 
-	if close_tls {
-		// 使用http
-		http.ListenAndServe(server, mux)
-	} else {
+	if enable_tls {
 		// 使用https
 		err := http.ListenAndServeTLS(server, tls_crt, tls_key, mux)
 		if err != nil {
 			fmt.Println("TLS Cert Error:", err.Error())
 		}
+		
+	} else {
+		// 使用http
+		http.ListenAndServe(server, mux)
 	}
 }
 

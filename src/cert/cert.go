@@ -87,7 +87,7 @@ func LoadCACert() (ca Cert) {
 
 }
 
-func CreateCert(tls_path string, domain string) (err error) {
+func CreateCert(tls_path string, domain_list []string, internet_ip string) (err error) {
 	/*
 		利用CA 证书颁发https 证书
 	*/
@@ -111,7 +111,8 @@ func CreateCert(tls_path string, domain string) (err error) {
 		IsCA:                  false,
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-		IPAddresses:           []net.IP{net.ParseIP("127.0.0.1"), net.ParseIP(domain)},
+		IPAddresses:           []net.IP{net.ParseIP("127.0.0.1"), net.ParseIP(internet_ip)},
+		DNSNames: domain_list,
 	}
 
 	// 创建证书目录
@@ -131,13 +132,13 @@ func CreateCert(tls_path string, domain string) (err error) {
 	return
 }
 
-func CreateTlsCert(tls_path string, domain string) (err error) {
+func CreateTlsCert(tls_path string,  domain_list []string, internet_ip string,is_new bool) (err error) {
 
 	// tls 证书路径
-	if !lib.Exists(filepath.Join(tls_path, "server.pem")) || !lib.Exists(filepath.Join(tls_path, "server.key")) {
+	if !lib.Exists(filepath.Join(tls_path, "server.pem")) || !lib.Exists(filepath.Join(tls_path, "server.key"))|| is_new {
 
 		// 创建证书
-		err = CreateCert(tls_path, domain)
+		err = CreateCert(tls_path, domain_list, internet_ip)
 
 	}
 	return

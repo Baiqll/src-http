@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/user"
 
 	"github.com/thinkeridea/go-extend/exnet"
@@ -74,4 +75,28 @@ func SetHosts(host string) {
 func UnloadHosts(host string) {
 
 }
+
+func NewDNS(domain string)(is_new bool){
+
+	is_new = false
+
+	cmd := exec.Command("sh", "-c",fmt.Sprintf("cat /etc/hosts | grep %s",domain))
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println(err)
+	}
+	if string(out) =="" {
+
+		is_new = true
+
+		cmd := exec.Command("sh", "-c", fmt.Sprintf("echo '127.0.0.1	%s' | sudo tee -a /etc/hosts > /dev/null",domain))
+		_, err := cmd.CombinedOutput()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	return
+}
+
 
