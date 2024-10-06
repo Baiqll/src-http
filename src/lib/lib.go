@@ -89,7 +89,7 @@ func NewDNS(domain string)(is_new bool){
 
 		is_new = true
 
-		cmd := exec.Command("sh", "-c", fmt.Sprintf("echo '127.0.0.1	%s' | sudo tee -a /etc/hosts > /dev/null",domain))
+		cmd := exec.Command("sh", "-c", fmt.Sprintf("echo '127.0.0.1	%s	# src-http' | sudo tee -a /etc/hosts > /dev/null",domain))
 		_, err := cmd.CombinedOutput()
 		if err != nil {
 			fmt.Println(err)

@@ -121,12 +121,17 @@ func main() {
 
 }
 
-func http_write(w http.ResponseWriter, res_data []byte){
+func set_response_header(w http.ResponseWriter){
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, UPDATE")
 	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
 	w.Header().Set("Access-Control-Expose-Headers", "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Cache-Control, Content-Language, Content-Type")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
+}
+
+func http_write(w http.ResponseWriter, res_data []byte){
+	
+	set_response_header(w)
 	w.Write(res_data)
 }
 
@@ -187,7 +192,7 @@ func http_server(server string, tls_crt string, tls_key string, payload string, 
 			
 		}else{
 			// 文件系统
-
+			set_response_header(w)
 			http.FileServer(http.Dir("./")).ServeHTTP(w, r)
 
 		}
