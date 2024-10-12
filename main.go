@@ -180,10 +180,41 @@ func http_server(server string, tls_crt string, tls_key string, payload string, 
 
 			http_write(w,data)
 			
-		}else if(strings.HasPrefix(r.URL.String(), "/Payload")){
-			// 自定义返回内容
+		}else if(strings.HasPrefix(r.URL.String(), "/payload")){
+			// 自定义返固定内容
 
-			http_write(w,[]byte(payload))
+			cmdtype := r.URL.Query().Get("type");
+
+			new_payload := r.URL.Query().Get("payload");
+
+			switch(cmdtype){
+			case "jscmd":
+				
+				w.Header().Set("Content-Type", "text/html; charset=utf-8")
+				if _, err := fmt.Fprintln(w, `<!DOCTYPE html>`+
+					`<html>`+
+					`<head><title>xss</title></head>`+
+					`<body>`+
+					`<script>` + new_payload + `</script>`+
+					`</body>`+
+					`</html>`); err != nil {
+						fmt.Println("jscmd Error:", err.Error())
+				}
+			case "html":
+				w.Header().Set("Content-Type", "text/html; charset=utf-8")
+				if _, err := fmt.Fprintln(w, new_payload); err != nil {
+					fmt.Println("html Error:", err.Error())
+				}
+			case "jscode":
+				w.Header().Set("Content-Type", "application/javascript;")
+				if _, err := fmt.Fprintln(w, new_payload); err != nil {
+					fmt.Println("html Error:", err.Error())
+				}
+
+			default:
+				http_write(w,[]byte(payload))
+			}
+
 
 		}else if(strings.HasPrefix(r.URL.String(), "/message")){
 			// 返回全内容（接收消息）
