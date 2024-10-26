@@ -71,6 +71,12 @@ func SetHosts(host string) {
 
 }
 
+// isIP 尝试将字符串解析为IP地址
+func IsIP(str string) bool {
+	ip := net.ParseIP(str)
+	return ip != nil
+}
+
 // 取消hosts域名绑定
 func UnloadHosts(host string) {
 
