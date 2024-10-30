@@ -36,12 +36,14 @@ Enabling https service dedicated to SRC testing
 	var enable_tls bool
 	var default_file string
 	var config_path = filepath.Join(lib.HomeDir(), ".config/src-http")
+	var enable_file_server bool
 
 
 	flag.StringVar(&server, "server", "", "https 服务")
 	flag.BoolVar(&enable_tls, "tls", false, "是否开启tls，默认关闭")
 	flag.StringVar(&payload, "payload", "", "payload")
-	flag.StringVar(&default_file, "f", "", "default_file")
+	flag.StringVar(&default_file, "df", "", "default_file")
+	flag.BoolVar(&enable_file_server,"fm", false, "是否开启文件服务，默认关闭")
 
 	// 解析命令行参数写入注册的flag里
 	flag.Parse()
@@ -62,6 +64,7 @@ Enabling https service dedicated to SRC testing
 		Payload: payload,
 		DefaultFile: default_file,
 		EnableTLS: enable_tls,
+		EnableFileServer: enable_file_server,
 	})
 
 }
@@ -161,7 +164,7 @@ func SRCHandler(config httpx.Config) http.HandlerFunc {
 
 			HttpWrite(w,[]byte(`{"message": "OK"}`))
 			
-		}else{
+		}else if(config.EnableFileServer){
 			// 文件系统
 			SetResponseHeader(w)
 			http.FileServer(http.Dir("./")).ServeHTTP(w, r)
