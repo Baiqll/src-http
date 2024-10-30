@@ -7,5 +7,5 @@ type Config struct{
 	Payload string
 	DefaultFile string
 	EnableTLS bool
-	
+	EnableFileServer bool
 }
