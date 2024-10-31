@@ -62,7 +62,7 @@ func(u *Uri) init_server_banner(){
 		banner += fmt.Sprintf("[*] Internet server %s://%s%s ...\n", method, u.InternetIp, Listening_port)
 	}
 
-	banner += fmt.Sprintf("[*] Listening 0.0.0.0:%s",Listening_port)
+	banner += fmt.Sprintf("[*] Listening 0.0.0.0:%s", u.Port)
 
 	u.ServerBanner = banner
 	
